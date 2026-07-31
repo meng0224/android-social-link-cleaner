@@ -144,3 +144,5 @@ URLCheck：規則、Automations 與模組均已完成設定
           git add README.md
           git commit -m "docs: add MacroDroid import instructions"
           git push
+
+# trigger 2
