@@ -175,3 +175,5 @@ MacroDroid腳本/
           git add README.md
           git commit -m "docs: add MacroDroid import instructions"
           git push
+
+# Triggered after the workflow existed on the default branch.
