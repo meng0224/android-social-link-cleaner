@@ -1,10 +1,8 @@
 name: One-time README sync
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - .github/workflows/one-time-readme-sync.yml
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -18,14 +16,14 @@ jobs:
         with:
           ref: main
 
-      - name: Add MacroDroid import documentation
+      - name: Update README and remove this workflow
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          path = Path("README.md")
-          text = path.read_text(encoding="utf-8")
+          path = Path('README.md')
+          text = path.read_text(encoding='utf-8')
 
           status_line = '- URLCheck Automations：已建立 GitHub 完整 JSON 備份；原版 URLCheck 3.5 仍需手動貼入更新。\n'
           macro_status = '- MacroDroid：已提供 Threads、Instagram、Facebook 三個 `.macro` 單一巨集檔，可由「匯出/匯入 → 匯入 → 儲存空間」逐一匯入。\n'
@@ -106,8 +104,7 @@ URLCheck：規則、Automations 與模組均已完成設定
                   raise SystemExit('MacroDroid section insertion point not found')
               text = text.replace(insertion_point, section, 1)
 
-          old = '''`.macro` 檔不會因為 GitHub 更新而自動套用到手機。更新後需要在 MacroDroid 手動匯入，或依 README 修改現有巨集。
-'''
+          old = '`.macro` 檔不會因為 GitHub 更新而自動套用到手機。更新後需要在 MacroDroid 手動匯入，或依 README 修改現有巨集。\n'
           new = '''`.macro` 檔不會因為 GitHub 更新而自動套用到手機。更新後需重新下載新版檔案，再依下列流程手動更新：
 
 ```text
@@ -132,17 +129,13 @@ URLCheck：規則、Automations 與模組均已完成設定
           path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Commit README
+          rm -f .github/workflows/one-time-readme-sync.yml
+
+      - name: Commit changes
         shell: bash
         run: |
-          if git diff --quiet -- README.md; then
-            echo "No README changes"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add README.md
+          git add README.md .github/workflows/one-time-readme-sync.yml
           git commit -m "docs: add MacroDroid import instructions"
           git push
-
-# trigger 2
