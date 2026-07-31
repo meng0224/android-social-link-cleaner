@@ -1,0 +1,47 @@
+name: Update URLCheck hashes
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "urlcheck/*.json"
+      - ".github/workflows/update-urlcheck-hashes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-hashes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JSON and update SHA-256 files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for file in urlcheck/*.json; do
+            python -m json.tool "$file" >/dev/null
+            sha256sum "$file" | awk '{print $1}' > "${file%.json}.sha256"
+          done
+
+      - name: Commit changed hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- urlcheck/*.sha256; then
+            echo "Hashes are already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add urlcheck/*.sha256
+          git commit -m "chore: update URLCheck hashes"
+          git push
