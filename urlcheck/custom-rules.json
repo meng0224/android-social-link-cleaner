@@ -1,0 +1,31 @@
+{
+  "自訂規則": {
+    "Threads": {
+      "urlPattern": "^https?://(?:www\\.)?threads\\.com",
+      "rules": [
+        "xmt",
+        "slof"
+      ]
+    },
+    "Instagram": {
+      "urlPattern": "^https?://(?:(?:www|m)\\.)?instagram\\.com",
+      "rules": [
+        "igsh",
+        "igshid"
+      ]
+    },
+    "Facebook": {
+      "urlPattern": "^https?://(?:(?:(?:www|m|mbasic|web|touch|l|lm)\\.)?facebook\\.com|(?:www\\.)?fb\\.watch)",
+      "rules": [
+        "fbclid",
+        "mibextid",
+        "rdid",
+        "share_url",
+        "ref",
+        "refsrc",
+        "__cft__",
+        "__tn__"
+      ]
+    }
+  }
+}
