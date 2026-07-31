@@ -52,10 +52,12 @@ https://www.facebook.com/reel/123456789012345/
 >
 > Facebook 網頁結構可能改版。本方案採「失敗安全」設計：只有解析結果符合已驗證的正式網址白名單時，才覆寫剪貼簿；解析失敗時保留原始分享網址並顯示通知。
 
-## 驗證狀態（2026-07-31）
+## 驗證狀態（2026-08-01）
 
 - Threads：已在 Android 手機實測成功。
 - Instagram：沿用 URLCheck＋MacroDroid 架構；各內容類型仍應分別測試。
+- URLCheck 網址清理器：已建立 GitHub 自訂規則與 SHA-256 檔，可由更新器拉取並合併到現有規則。
+- URLCheck Automations：已建立 GitHub 完整 JSON 備份；原版 URLCheck 3.5 仍需手動貼入更新。
 - Facebook：
   - 一般／粉專貼文：已實測。
   - 含長標題 slug 的貼文：已實測，可縮成 `/帳號/posts/數字ID/`。
@@ -77,9 +79,88 @@ Shizuku＋aShell 只用來授予 MacroDroid 的 `READ_LOGS` 權限。
 
 ---
 
-# 一、URLCheck：ClearURLs 追蹤參數清理
+# 一、URLCheck：網址清理器（ClearURLs）追蹤參數清理
 
-進入：
+## 建議方式：使用 GitHub 規則來源
+
+本專案把自訂規則放在：
+
+```text
+urlcheck/custom-rules.json
+```
+
+進入 URLCheck 網址清理器的「更新器／規則更新」畫面，填入：
+
+規則網址：
+
+```text
+https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/custom-rules.json
+```
+
+SHA-256 網址：
+
+```text
+https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/custom-rules.sha256
+```
+
+然後按「立即更新」，確認成功後開啟自動更新，並在網址清理器開啟「自動套用」。URLCheck 的自動檢查週期約為一週，也可以隨時手動更新。
+
+### 更新時會不會覆蓋原生 `providers`？
+
+不會。遠端檔案只有最外層的 `"自訂規則"`：
+
+```json
+{
+  "自訂規則": {
+    "Threads": {
+      "urlPattern": "^https?://(?:www\.)?threads\.com",
+      "rules": ["xmt", "slof"]
+    },
+    "Instagram": {
+      "urlPattern": "^https?://(?:(?:www|m)\.)?instagram\.com",
+      "rules": ["igsh", "igshid"]
+    },
+    "Facebook": {
+      "urlPattern": "^https?://(?:(?:(?:www|m|mbasic|web|touch|l|lm)\.)?facebook\.com|(?:www\.)?fb\.watch)",
+      "rules": ["fbclid", "mibextid", "rdid", "share_url", "ref", "refsrc", "__cft__", "__tn__"]
+    }
+  }
+}
+```
+
+URLCheck 拉取遠端規則時採用最外層物件合併：
+
+```text
+手機目前：providers + 舊版自訂規則
+GitHub 遠端：新版自訂規則
+更新後：providers 保留，自訂規則替換成新版
+```
+
+遠端沒有 `"providers"`，所以不會碰到手機現有的原生規則。
+
+> [!WARNING]
+> 不要把 `custom-rules.json` 直接貼進網址清理器的 JSON 編輯器，再用它取代整份內容。JSON 編輯器儲存的是完整目錄；若只貼入 `"自訂規則"`，手機上的 `"providers"` 會消失。
+>
+> `custom-rules.json` 應填在更新器的規則網址中，讓 URLCheck 以合併模式套用。
+
+### 官方規則後續更新限制
+
+把規則網址改成此 GitHub Raw 位址後，URLCheck 會從本專案取得自訂規則，不再自動連到 ClearURLs 官方規則來源。因此手機目前已有的 `"providers"` 會保留，但官方日後新增或修改的規則不會跟著自動更新。
+
+需要手動刷新官方規則時：
+
+```text
+1. 在更新器使用「還原／恢復預設」，回到官方規則網址
+2. 按「立即更新」，更新官方 providers
+3. 再填回本專案的規則網址與 SHA-256 網址
+4. 再按一次「立即更新」，合併最新版自訂規則
+```
+
+官方更新會替換 `"providers"`，本專案更新會替換 `"自訂規則"`，兩者可以並存。
+
+## 手動備援方式
+
+無法使用遠端更新器時，才進入：
 
 ```text
 URLCheck
@@ -88,97 +169,34 @@ URLCheck
 → JSON 編輯器
 ```
 
-URLCheck 原本的 JSON 大致是：
-
-```json
-{
-  "providers": {
-    ...
-  }
-}
-```
-
-自訂規則不要直接加進 `"providers"` 裡，避免更新官方規則時被覆蓋。
-
-應在最外層、與 `"providers"` 同一層加入 `"自訂規則"`。檔案尾端應改成類似：
-
-```json
-  },
-  "自訂規則": {
-    "Threads": {
-      "urlPattern": "^https?://(?:www\\.)?threads\\.com",
-      "rules": [
-        "xmt",
-        "slof"
-      ]
-    },
-    "Instagram": {
-      "urlPattern": "^https?://(?:(?:www|m)\\.)?instagram\\.com",
-      "rules": [
-        "igsh",
-        "igshid"
-      ]
-    },
-    "Facebook": {
-      "urlPattern": "^https?://(?:(?:(?:www|m|mbasic|web|touch|l|lm)\\.)?facebook\\.com|(?:www\\.)?fb\\.watch)",
-      "rules": [
-        "fbclid",
-        "mibextid",
-        "rdid",
-        "share_url",
-        "ref",
-        "refsrc",
-        "__cft__",
-        "__tn__"
-      ]
-    }
-  }
-}
-```
-
-完整結構概念：
+請在完整目錄最外層、與 `"providers"` 同一層加入 `"自訂規則"`：
 
 ```json
 {
   "providers": {
     "原本官方規則": {
       "urlPattern": "...",
-      "rules": [
-        "..."
-      ]
+      "rules": ["..."]
     }
   },
   "自訂規則": {
     "Threads": {
-      "urlPattern": "^https?://(?:www\\.)?threads\\.com",
-      "rules": [
-        "xmt",
-        "slof"
-      ]
+      "urlPattern": "^https?://(?:www\.)?threads\.com",
+      "rules": ["xmt", "slof"]
     },
     "Instagram": {
-      "urlPattern": "^https?://(?:(?:www|m)\\.)?instagram\\.com",
-      "rules": [
-        "igsh",
-        "igshid"
-      ]
+      "urlPattern": "^https?://(?:(?:www|m)\.)?instagram\.com",
+      "rules": ["igsh", "igshid"]
     },
     "Facebook": {
-      "urlPattern": "^https?://(?:(?:(?:www|m|mbasic|web|touch|l|lm)\\.)?facebook\\.com|(?:www\\.)?fb\\.watch)",
-      "rules": [
-        "fbclid",
-        "mibextid",
-        "rdid",
-        "share_url",
-        "ref",
-        "refsrc",
-        "__cft__",
-        "__tn__"
-      ]
+      "urlPattern": "^https?://(?:(?:(?:www|m|mbasic|web|touch|l|lm)\.)?facebook\.com|(?:www\.)?fb\.watch)",
+      "rules": ["fbclid", "mibextid", "rdid", "share_url", "ref", "refsrc", "__cft__", "__tn__"]
     }
   }
 }
 ```
+
+自訂規則不要放進 `"providers"`，否則官方 `"providers"` 更新時可能把它覆蓋。
 
 ## 網址清理器模組設定
 
@@ -210,6 +228,35 @@ URLCheck
 → 自動化／Automations
 → JSON 編輯器
 ```
+
+## GitHub 設定檔與更新限制
+
+Automations 完整設定：
+
+```text
+https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/automations.json
+```
+
+對應 SHA-256：
+
+```text
+https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/automations.sha256
+```
+
+> [!IMPORTANT]
+> URLCheck 3.5 的 Automations 只有本機 JSON 編輯器，沒有網址清理器那種遠端規則網址、雜湊驗證與自動更新功能。因此 GitHub 上的 `automations.json` 是最新版備份與發布來源，但手機端仍須手動更新。
+
+更新方式：
+
+```text
+1. 開啟 automations.json Raw 網址
+2. 複製完整 JSON
+3. 進入 URLCheck → 自動化／Automations → JSON 編輯器
+4. 全選舊內容並貼上新版完整 JSON
+5. 儲存
+```
+
+`automations.sha256` 可用來確認下載內容是否一致，但 URLCheck Automations 本身不會讀取這個雜湊檔。
 
 使用以下完整設定：
 
@@ -1339,6 +1386,33 @@ Unshortener／還原縮址
 
 # 十二、備份用設定
 
+## GitHub 維護檔案與 Raw 位址
+
+| 用途 | Repository 路徑 | Raw 位址 |
+|---|---|---|
+| 網址清理器自訂規則 | `urlcheck/custom-rules.json` | `https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/custom-rules.json` |
+| 自訂規則 SHA-256 | `urlcheck/custom-rules.sha256` | `https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/custom-rules.sha256` |
+| Automations 完整設定 | `urlcheck/automations.json` | `https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/automations.json` |
+| Automations SHA-256 | `urlcheck/automations.sha256` | `https://raw.githubusercontent.com/meng0224/android-social-link-cleaner/main/urlcheck/automations.sha256` |
+
+`.github/workflows/update-urlcheck-hashes.yml` 會在 `urlcheck/*.json` 變更時驗證 JSON，並重新計算相應的 `.sha256` 檔案。
+
+目前工作流程只負責：
+
+```text
+驗證 JSON 格式
+重新計算 SHA-256
+提交變更後的雜湊檔
+```
+
+它目前不會下載或合併 ClearURLs 官方完整目錄，因此不能解決官方 `"providers"` 自動同步問題。
+
+```text
+custom-rules.json → 填入網址清理器更新器，以合併模式更新「自訂規則」
+automations.json  → 手動貼入 Automations JSON 編輯器
+*.sha256          → 驗證對應 JSON 的內容完整性
+```
+
 ## URLCheck ClearURLs 自訂規則
 
 ```json
@@ -1373,7 +1447,7 @@ Unshortener／還原縮址
 }
 ```
 
-注意：這只是加到原本規則最外層的片段，不是一份可以獨立取代全部規則的完整 JSON。
+注意：這一段是手動編輯完整目錄時使用的片段。GitHub 上的 `custom-rules.json` 雖然是有效 JSON，但只包含頂層 `"自訂規則"`，應交給更新器合併，不能拿去取代 JSON 編輯器中的完整目錄。
 
 ## URLCheck Automations 完整設定
 
@@ -1585,3 +1659,40 @@ Facebook 改版時，最可能需要更新：
 ```
 
 這能讓 Facebook 改版後「停止自動處理」，而不是「寫入錯誤或上一筆網址」。
+
+---
+
+# 十四、Repository 更新流程
+
+## 修改追蹤參數
+
+編輯 `urlcheck/custom-rules.json`。GitHub Actions 會重新計算 `urlcheck/custom-rules.sha256`。已啟用 URLCheck 自動更新的裝置，之後會在週期檢查時取得新版 `"自訂規則"`，也可以手動按「立即更新」。
+
+## 修改 URLCheck Automations
+
+編輯 `urlcheck/automations.json`。GitHub Actions 會重新計算 `urlcheck/automations.sha256`。原版 URLCheck 3.5 不會自動拉取 Automations，每次修改後仍須在手機重新貼入完整 JSON。
+
+## 修改 MacroDroid 巨集
+
+`.macro` 檔位於 `MacroDroid腳本/`，不會因為 GitHub 更新而自動套用到手機。更新後需要在 MacroDroid 手動匯入，或依 README 修改現有巨集。
+
+## 避免破壞更新相容性
+
+```text
+custom-rules.json 最外層只使用「自訂規則」
+不要在遠端自訂檔加入 providers
+Automations 必須保存為完整 JSON
+每次變更後確認對應 SHA-256 已同步
+```
+
+若未來要讓官方 `"providers"` 與自訂規則完全自動更新，應新增工作流程：
+
+```text
+定期下載 ClearURLs 官方目錄
+→ 合併 urlcheck/custom-rules.json
+→ 輸出完整合併版 JSON
+→ 計算合併版 SHA-256
+→ 讓 URLCheck 使用合併版 Raw 位址
+```
+
+目前尚未實作這個官方目錄鏡像流程。
