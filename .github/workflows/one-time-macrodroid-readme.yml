@@ -1,0 +1,177 @@
+name: One-time MacroDroid README update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-time-macrodroid-readme.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Update MacroDroid import documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("README.md")
+          text = path.read_text(encoding="utf-8")
+
+          status_old = '''- URLCheck Automations：已建立 GitHub 完整 JSON 備份；原版 URLCheck 3.5 仍需手動貼入更新。
+- Facebook：
+'''
+          status_new = '''- URLCheck Automations：已建立 GitHub 完整 JSON 備份；原版 URLCheck 3.5 仍需手動貼入更新。
+- MacroDroid：已提供 Threads、Instagram、Facebook 三個 `.macro` 單一巨集檔，可由「匯出/匯入 → 匯入 → 儲存空間」逐一匯入。
+- Facebook：
+'''
+
+          permission_old = '''需要重新授權的可能情況：
+
+- 重裝 MacroDroid
+- 清除 MacroDroid 資料
+- 系統或權限設定被重設
+
+---
+
+# 五、MacroDroid：Threads 巨集
+'''
+          permission_new = '''需要重新授權的可能情況：
+
+- 重裝 MacroDroid
+- 清除 MacroDroid 資料
+- 系統或權限設定被重設
+
+## 直接匯入 Repository 巨集（建議）
+
+本專案已提供三個 MacroDroid **單一巨集檔**：
+
+- [`threads追蹤碼移除.macro`](MacroDroid腳本/threads追蹤碼移除.macro)
+- [`Instagram追蹤碼移除.macro`](MacroDroid腳本/Instagram追蹤碼移除.macro)
+- [`facebook追蹤碼移除.macro`](MacroDroid腳本/facebook追蹤碼移除.macro)
+
+先從 GitHub 下載三個檔案的原始內容，並確認檔名仍以 `.macro` 結尾；不要讓瀏覽器或檔案管理器把它改成 `.macro.txt`。
+
+為避免巨集在 URLCheck 與權限尚未設定完成時立刻觸發，可以先把 MacroDroid 首頁右上角的總開關暫時關閉。
+
+依目前繁體中文介面進入：
+
+```text
+MacroDroid 首頁
+→ 匯出/匯入
+→ 匯入
+→ 儲存空間
+→ 選擇一個 .macro 檔
+→ 確認匯入
+```
+
+三個 `.macro` 檔需要逐一匯入。畫面上方「匯出」區塊裡的「Android 快速分享」是裝置間傳送功能，不是從 GitHub 匯入檔案的入口。
+
+### 「匯入時重設變數」怎麼選？
+
+本專案建議勾選：
+
+```text
+匯入時重設變數
+```
+
+三個巨集不依賴必須保留的既有全域變數；Facebook 巨集也會在每次執行開頭重新初始化自己的區域變數。勾選可避免把匯出測試時留下的變數值一併帶入。即使未勾選，正常執行時仍會由初始化動作覆蓋，但第一次匯入建議直接勾選。
+
+也可以從 Android 檔案管理器直接點開 `.macro` 檔，並選擇用 MacroDroid 開啟；本文件仍以「匯出/匯入 → 儲存空間」為標準流程。
+
+### 匯入完成後檢查
+
+進入底部的「巨集」分頁，確認：
+
+```text
+分類：分享網址清理
+threads追蹤碼移除：已啟用
+Instagram追蹤碼移除：已啟用
+facebook追蹤碼移除：已啟用
+```
+
+接著確認：
+
+```text
+MacroDroid 首頁右上角總開關：開啟
+READ_LOGS：已授予
+URLCheck：規則、Automations 與模組均已完成設定
+```
+
+`.macro` 是單一巨集匯入，不是完整環境備份；本專案不提供也不要求匯入 `.mdr`。完整 `.mdr` 備份可能影響裝置上原有的巨集與設定，不要拿其他來源的 `.mdr` 取代本機環境。
+
+> [!NOTE]
+> 以下第五至第七章同時作為「手動建立」與「匯入後核對」說明。已成功匯入三個 `.macro` 檔時，不必再從零重建；只需對照關鍵觸發器、Intent、HTTP 與安全白名單。
+
+---
+
+# 五、MacroDroid：Threads 巨集
+'''
+
+          repo_old = '''## 修改 MacroDroid 巨集
+
+MacroDroid 巨集檔位於：
+
+```text
+MacroDroid腳本/
+```
+
+`.macro` 檔不會因為 GitHub 更新而自動套用到手機。更新後需要在 MacroDroid 手動匯入，或依 README 的步驟修改現有巨集。
+'''
+          repo_new = '''## 修改 MacroDroid 巨集
+
+MacroDroid 巨集檔位於：
+
+```text
+MacroDroid腳本/
+```
+
+`.macro` 檔不會因為 GitHub 更新而自動套用到手機。更新後需重新下載新版檔案，再依下列流程手動更新：
+
+```text
+1. 暫時關閉 MacroDroid 首頁右上角總開關
+2. 停用或刪除手機上的同名舊版巨集，避免兩份同時監聽剪貼簿
+3. 首頁 → 匯出/匯入 → 匯入 → 儲存空間
+4. 選擇新版 .macro，建議勾選「匯入時重設變數」
+5. 檢查巨集內容與所需權限後重新啟用
+6. 開回 MacroDroid 總開關並逐一測試三個平台
+```
+
+也可以不重新匯入，直接依 README 修改現有巨集。MacroDroid 沒有針對這些 GitHub 檔案的背景自動更新機制。
+'''
+
+          for old, new, name in [
+              (status_old, status_new, "status"),
+              (permission_old, permission_new, "import section"),
+              (repo_old, repo_new, "repository workflow"),
+          ]:
+              if old not in text:
+                  raise SystemExit(f"Expected block not found: {name}")
+              text = text.replace(old, new, 1)
+
+          if text.count("```") % 2:
+              raise SystemExit("Unbalanced Markdown code fences")
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit README
+        shell: bash
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "No README changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: add MacroDroid import instructions"
+          git push
