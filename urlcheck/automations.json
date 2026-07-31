@@ -1,0 +1,69 @@
+{
+  "Threads：展開短網址": {
+    "regex": "^https?:\\/\\/(?:www\\.)?threads\\.com\\/share\\/.*",
+    "action": "checkStatus",
+    "enabled": true,
+    "stop": true
+  },
+  "Threads：複製展開後網址": {
+    "regex": "^https?:\\/\\/(?:www\\.)?threads\\.com\\/@[^\\/]+\\/post\\/[^\\/?#]+\\/?$",
+    "action": [
+      "copy",
+      "close"
+    ],
+    "enabled": true,
+    "stop": true
+  },
+  "Instagram：展開 share 短網址": {
+    "regex": "^https?:\\/\\/(?:(?:www|m)\\.)?instagram\\.com\\/share\\/.*",
+    "action": "checkStatus",
+    "enabled": true,
+    "stop": true
+  },
+  "Instagram：展開 instagr.am": {
+    "regex": "^https?:\\/\\/(?:www\\.)?instagr\\.am\\/.*",
+    "action": "checkStatus",
+    "enabled": true,
+    "stop": true
+  },
+  "Instagram：複製貼文、Reels 與 IGTV": {
+    "regex": "^(?!.*[?&](?:igsh|igshid|utm_[^=&#]+)=)https?:\\/\\/(?:(?:www|m)\\.)?instagram\\.com\\/(?:p|reel|reels|tv)\\/[A-Za-z0-9_-]+\\/?(?:\\?[^#]*)?$",
+    "action": [
+      "copy",
+      "close"
+    ],
+    "enabled": true,
+    "stop": true
+  },
+  "Instagram：複製限時動態與精選": {
+    "regex": "^(?!.*[?&](?:igsh|igshid|utm_[^=&#]+)=)https?:\\/\\/(?:(?:www|m)\\.)?instagram\\.com\\/stories\\/[A-Za-z0-9._]+\\/[0-9]+\\/?(?:\\?[^#]*)?$",
+    "action": [
+      "copy",
+      "close"
+    ],
+    "enabled": true,
+    "stop": true
+  },
+  "Instagram：複製個人檔案": {
+    "regex": "^(?!.*[?&](?:igsh|igshid|utm_[^=&#]+)=)https?:\\/\\/(?:(?:www|m)\\.)?instagram\\.com\\/(?!(?:p|reel|reels|tv|stories|share|explore|accounts|direct|about|legal|web|challenge|checkpoint|privacy|terms)(?:\\/|$))[A-Za-z0-9._]+\\/?(?:\\?[^#]*)?$",
+    "action": [
+      "copy",
+      "close"
+    ],
+    "enabled": true,
+    "stop": true
+  },
+  "Facebook：複製已驗證正式網址": {
+    "regex": [
+      "^(?!.*[?&](?:fbclid|mibextid|rdid|share_url|utm_[^=&#]+)=)https?:\\/\\/(?:www\\.)?facebook\\.com\\/reel\\/[0-9]+\\/?(?:[?#].*)?$",
+      "^(?!.*[?&](?:fbclid|mibextid|rdid|share_url|utm_[^=&#]+)=)https?:\\/\\/(?:www\\.)?facebook\\.com\\/[^\\/?#]+\\/posts\\/[0-9]+\\/?(?:[?#].*)?$",
+      "^(?!.*[?&](?:fbclid|mibextid|rdid|share_url|utm_[^=&#]+)=)https?:\\/\\/(?:www\\.)?facebook\\.com\\/groups\\/[^\\/?#]+\\/posts\\/[0-9]+\\/?(?:[?#].*)?$"
+    ],
+    "action": [
+      "copy",
+      "close"
+    ],
+    "enabled": true,
+    "stop": true
+  }
+}
